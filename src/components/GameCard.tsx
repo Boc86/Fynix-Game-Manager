@@ -8,17 +8,17 @@ interface GameCardProps {
 
 export function GameCard({ game, onLaunch }: GameCardProps) {
   return (
-    <div className="flix-card group">
-      <div className="relative pb-[150%]">
+    <div className="flix-card" data-game-id={game.id}>
+      <div className="flix-card-media">
         {game.cover_url ? (
           <img
             src={game.cover_url}
             alt={game.name}
-            className="absolute inset-0 w-full h-full object-cover rounded"
+            className="flix-card-image"
           />
         ) : (
-          <div className="absolute inset-0 bg-secondary rounded flex items-center justify-center">
-            <span className="text-muted">{game.name}</span>
+          <div className="flix-card-placeholder">
+            <span className="flix-card-placeholder-text">{game.name}</span>
           </div>
         )}
         <div className="flix-play-overlay">

@@ -2,19 +2,6 @@ use crate::models::game::Game;
 use crate::core::plugin::StorePlugin;
 use async_trait::async_trait;
 use std::path::{Path, PathBuf};
-use once_cell::sync::Lazy;
-
-/// Regex patterns for parsing Steam appmanifest .acf files.
-/// Each pattern captures the value for a specific ACF key.
-static ACF_PATTERNS: Lazy<Vec<regex::Regex>> = Lazy::new(|| {
-    vec![
-        regex::Regex::new(r#""appid"\s+"([^"]+)""#).unwrap(),
-        regex::Regex::new(r#""name"\s+"([^"]+)""#).unwrap(),
-        regex::Regex::new(r#""installdir"\s+"([^"]+)""#).unwrap(),
-        regex::Regex::new(r#""LastPlayed"\s+"([^"]+)""#).unwrap(),
-        regex::Regex::new(r#""SizeOnDisk"\s+"([^"]+)""#).unwrap(),
-    ]
-});
 
 /// Parse a single Steam appmanifest .acf file into a Game.
 ///
@@ -26,35 +13,26 @@ static ACF_PATTERNS: Lazy<Vec<regex::Regex>> = Lazy::new(|| {
 ///     "appid"        "730"
 ///     "name"        "Counter-Strike 2"
 ///     "installdir"    "Counter-Strike Global Offensive"
-///     "LastUpdated"    "1700000000"
 ///     "LastPlayed"    "1700000000"
 /// }
 /// ```
 pub fn parse_appmanifest(content: &str, steamapps_dir: &Path) -> anyhow::Result<Game> {
-    // ACF_PATTERNS captures are in order: appid, name, installdir, LastPlayed, SizeOnDisk
-    let app_id = ACF_PATTERNS[0]
-        .captures(content)
-        .and_then(|c| c.get(1))
-        .map(|m| m.as_str())
+    let app_id = extract_acf_value(content, "appid")
         .ok_or_else(|| anyhow::anyhow!("Could not parse appid from appmanifest"))?;
+    let name = extract_acf_value(content, "name")
+        .unwrap_or_else(|| "Unknown".to_string());
 
-    let name = ACF_PATTERNS[1]
-        .captures(content)
-        .and_then(|c| c.get(1))
-        .map(|m| m.as_str())
-        .unwrap_or("Unknown");
+    let mut game = Game::new(&format!("steam:{}", app_id), &name, "Valve");
 
-    let mut game = Game::new(&format!("steam:{}", app_id), name, "Valve");
-
-    // installdir (optional, present in some manifests)
-    if let Some(m) = ACF_PATTERNS[2].captures(content).and_then(|c| c.get(1)) {
-        let install_path = steamapps_dir.join("common").join(m.as_str());
+    // installdir (optional)
+    if let Some(installdir) = extract_acf_value(content, "installdir") {
+        let install_path = steamapps_dir.join("common").join(&installdir);
         game = game.with_install_path(install_path.to_string_lossy().to_string());
     }
 
     // LastPlayed (optional — 0 means never played)
-    if let Some(m) = ACF_PATTERNS[3].captures(content).and_then(|c| c.get(1)) {
-        if let Ok(ts) = m.as_str().parse::<u64>() {
+    if let Some(last_played_str) = extract_acf_value(content, "LastPlayed") {
+        if let Ok(ts) = last_played_str.parse::<u64>() {
             if ts > 0 {
                 game = game.with_last_played(ts);
             }
@@ -64,10 +42,17 @@ pub fn parse_appmanifest(content: &str, steamapps_dir: &Path) -> anyhow::Result<
     Ok(game)
 }
 
+/// Extract a key-value pair from ACF/VDF content.
+/// Matches: "key"    "value"
+fn extract_acf_value(content: &str, key: &str) -> Option<String> {
+    let re = regex::Regex::new(&format!(r#""{}"\s+"([^"]+)""#, key)).unwrap();
+    re.captures(content).and_then(|c| c.get(1).map(|m| m.as_str().to_string()))
+}
+
 /// Plugin for detecting games installed via Steam.
 ///
 /// Reads `appmanifest_*.acf` files from `steamapps/` directories.
-/// Steam does not require authentication — all installed games are local.
+/// Auto-discovers Steam path and all library folders across all HDDs.
 pub struct SteamPlugin {
     steam_path: PathBuf,
 }
@@ -77,56 +62,110 @@ impl SteamPlugin {
         Self { steam_path }
     }
 
+    /// Auto-detect the Steam installation path from common locations.
+    pub fn detect_steam_path() -> Option<PathBuf> {
+        let common_paths = [
+            "/home/boc/.local/share/Steam",
+            "/home/boc/.steam/steam",
+            "/home/boc/.steam/debian",
+            "/var/lib/flatpak/exports/share/Steam",
+            "/usr/share/steam",
+        ];
+
+        for path in &common_paths {
+            let p = PathBuf::from(path);
+            if p.exists() && p.join("steamapps").exists() {
+                return Some(p);
+            }
+        }
+
+        // Check environment variable
+        if let Some(steam_home) = std::env::var_os("STEAM_HOME") {
+            let p = PathBuf::from(steam_home);
+            if p.join("steamapps").exists() {
+                return Some(p);
+            }
+        }
+
+        // Check for steam binary and use --dir flag
+        if let Ok(output) = std::process::Command::new("steam")
+            .arg("--dir")
+            .output()
+        {
+            let path = String::from_utf8_lossy(&output.stdout);
+            let path = path.trim();
+            if !path.is_empty() {
+                let p = PathBuf::from(path);
+                if p.join("steamapps").exists() {
+                    return Some(p);
+                }
+            }
+        }
+
+        None
+    }
+
     fn steamapps_dir(&self) -> PathBuf {
         self.steam_path.join("steamapps")
     }
 
-    /// Discover all library folders by parsing `libraryfolders.vdf`
+    /// Discover all library folders by parsing `libraryfolders.vdf`.
+    /// Checks both `steamapps/libraryfolders.vdf` and `config/libraryfolders.vdf`.
     fn library_folders(&self) -> Vec<PathBuf> {
         let mut folders = vec![self.steamapps_dir()];
 
-        let vdf_path = self.steam_path.join("steamapps/libraryfolders.vdf");
-        if let Ok(content) = std::fs::read_to_string(&vdf_path) {
-            // Look for "path" entries in the VDF
-            for line in content.lines() {
-                if let Some(path_str) = extract_vdf_path(line) {
-                    let path = PathBuf::from(path_str).join("steamapps");
-                    if path.exists() {
-                        folders.push(path);
+        // Try multiple locations for libraryfolders.vdf
+        let vdf_paths = [
+            self.steam_path.join("steamapps/libraryfolders.vdf"),
+            self.steam_path.join("config/libraryfolders.vdf"),
+        ];
+
+        for vdf_path in &vdf_paths {
+            if let Ok(content) = std::fs::read_to_string(vdf_path) {
+                if let Some(paths) = extract_vdf_paths(&content) {
+                    for path_str in paths {
+                        let path = PathBuf::from(&path_str).join("steamapps");
+                        if path.exists() && !folders.contains(&path) {
+                            folders.push(path);
+                        }
                     }
                 }
             }
         }
+
         folders
     }
 
     /// Find the executable for a Steam game
     fn find_executable(&self, app_id: &str) -> Option<String> {
-        // Check appmanifest for the launch executable
         let manifest = self.steamapps_dir().join(format!("appmanifest_{}.acf", app_id));
         if let Ok(content) = std::fs::read_to_string(&manifest) {
             if let Some(exec) = extract_acf_value(&content, "LaunchExePath") {
                 return Some(exec);
             }
         }
+        // Also check in library folders
+        for folder in self.library_folders() {
+            let manifest = folder.join(format!("appmanifest_{}.acf", app_id));
+            if let Ok(content) = std::fs::read_to_string(&manifest) {
+                if let Some(exec) = extract_acf_value(&content, "LaunchExePath") {
+                    return Some(exec);
+                }
+            }
+        }
         None
     }
 }
 
-fn extract_vdf_path(line: &str) -> Option<String> {
-    if line.contains("\"path\"") {
-        let parts: Vec<&str> = line.split('\t').collect();
-        if parts.len() >= 2 {
-            let path = parts[1].trim().trim_matches('"');
-            return Some(path.to_string());
-        }
-    }
-    None
-}
-
-fn extract_acf_value(content: &str, key: &str) -> Option<String> {
-    let re = regex::Regex::new(&format!(r#""{}"\s+"([^"]+)""#, key)).unwrap();
-    re.captures(content).and_then(|c| c.get(1).map(|m| m.as_str().to_string()))
+/// Extract all "path" values from a Steam VDF file.
+/// VDF format: "path"    "/some/path"
+fn extract_vdf_paths(content: &str) -> Option<Vec<String>> {
+    let re = regex::Regex::new(r#""path"\s+"([^"]+)""#).unwrap();
+    let paths: Vec<String> = re
+        .captures_iter(content)
+        .filter_map(|c| c.get(1).map(|m| m.as_str().to_string()))
+        .collect();
+    if paths.is_empty() { None } else { Some(paths) }
 }
 
 #[async_trait]
@@ -151,7 +190,6 @@ impl StorePlugin for SteamPlugin {
                     if name.starts_with("appmanifest_") && name.ends_with(".acf") {
                         if let Ok(content) = std::fs::read_to_string(entry.path()) {
                             if let Ok(mut game) = parse_appmanifest(&content, &folder) {
-                                // Try to find executable
                                 let app_id = game.id.strip_prefix("steam:").unwrap_or("");
                                 if let Some(exec) = self.find_executable(app_id) {
                                     game = game.with_executable(exec);
@@ -172,22 +210,24 @@ impl StorePlugin for SteamPlugin {
 
     async fn get_game_details(&self, game_id: &str) -> anyhow::Result<Option<Game>> {
         let app_id = game_id.strip_prefix("steam:").ok_or_else(|| anyhow::anyhow!("invalid steam id"))?;
-        let manifest = self.steamapps_dir().join(format!("appmanifest_{}.acf", app_id));
-        if manifest.exists() {
-            let content = std::fs::read_to_string(&manifest)?;
-            let mut game = parse_appmanifest(&content, &self.steamapps_dir())?;
-            if let Some(exec) = self.find_executable(app_id) {
-                game = game.with_executable(exec);
+
+        for folder in self.library_folders() {
+            let manifest = folder.join(format!("appmanifest_{}.acf", app_id));
+            if manifest.exists() {
+                let content = std::fs::read_to_string(&manifest)?;
+                let mut game = parse_appmanifest(&content, &folder)?;
+                if let Some(exec) = self.find_executable(app_id) {
+                    game = game.with_executable(exec);
+                }
+                return Ok(Some(game));
             }
-            Ok(Some(game))
-        } else {
-            Ok(None)
         }
+        Ok(None)
     }
 
     async fn launch_game(&self, game_id: &str) -> anyhow::Result<()> {
         let app_id = game_id.strip_prefix("steam:").ok_or_else(|| anyhow::anyhow!("invalid steam id"))?;
-        // Use Steam URL protocol to launch
+        // Use Steam URL protocol to launch — works regardless of install location
         let steam_exe = self.steam_path.join("steam");
         if steam_exe.exists() {
             std::process::Command::new(&steam_exe)
@@ -195,12 +235,19 @@ impl StorePlugin for SteamPlugin {
                 .spawn()?;
             Ok(())
         } else {
-            Err(anyhow::anyhow!("Steam executable not found at {:?}", steam_exe))
+            if let Ok(_) = std::process::Command::new("xdg-open")
+                .arg(format!("steam://run/{}", app_id))
+                .spawn()
+            {
+                Ok(())
+            } else {
+                Err(anyhow::anyhow!("Steam executable not found at {:?}", steam_exe))
+            }
         }
     }
 
     fn is_authenticated(&self) -> bool {
-        true
+        self.steam_path.exists()
     }
 }
 
@@ -214,7 +261,6 @@ mod tests {
             "appid" "730"
             "name" "Counter-Strike 2"
             "installdir" "Counter-Strike Global Offensive"
-            "LastUpdated" "1700000000"
             "LastPlayed" "1700000000"
         }"#;
         let steamapps = std::path::Path::new("/home/user/.steam/steam/steamapps");
@@ -248,5 +294,35 @@ mod tests {
         assert_eq!(game.id, "steam:123");
         assert_eq!(game.name, "Some Game");
         assert!(game.last_played.is_none());
+    }
+
+    #[test]
+    fn test_extract_vdf_paths() {
+        let vdf = r#""libraryfolders"
+{
+    "0"
+    {
+        "path" "/home/boc/.local/share/Steam"
+        "apps"
+        {
+            "730" "12345"
+        }
+    }
+    "1"
+    {
+        "path" "/mnt/Games1/SteamLibrary"
+    }
+}"#;
+        let paths = extract_vdf_paths(vdf).unwrap();
+        assert_eq!(paths.len(), 2);
+        assert_eq!(paths[0], "/home/boc/.local/share/Steam");
+        assert_eq!(paths[1], "/mnt/Games1/SteamLibrary");
+    }
+
+    #[test]
+    fn test_steam_plugin_detect_steam_path() {
+        if let Some(path) = SteamPlugin::detect_steam_path() {
+            assert!(path.join("steamapps").exists());
+        }
     }
 }

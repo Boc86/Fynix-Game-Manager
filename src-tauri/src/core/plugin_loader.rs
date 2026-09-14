@@ -21,12 +21,15 @@ impl PluginLoader {
     /// Get all built-in plugins (Steam, Heroic, Lutris).
     /// These are always available without external dependencies.
     pub fn builtin_plugins(&self) -> Vec<Box<dyn StorePlugin>> {
+        // Auto-detect Steam path
+        let steam_path = std::env::var("STEAM_PATH")
+            .map(PathBuf::from)
+            .ok()
+            .or_else(|| SteamPlugin::detect_steam_path())
+            .unwrap_or_else(|| PathBuf::from("/home/boc/.local/share/Steam"));
+
         vec![
-            Box::new(SteamPlugin::new(
-                std::env::var("STEAM_PATH")
-                    .map(PathBuf::from)
-                    .unwrap_or_else(|_| PathBuf::from("/home/boc/.steam/steam"))
-            )),
+            Box::new(SteamPlugin::new(steam_path)),
             Box::new(HeroicPlugin::new()),
             Box::new(LutrisPlugin::new()),
         ]

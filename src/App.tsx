@@ -60,7 +60,7 @@ function App() {
   return (
     <div className="flix-app">
       <header className="flix-header">
-        <h1>🎬 Fynix<span> GM</span></h1>
+        <h1 className="flix-logo">Fynix<span className="flix-logo-red"> GM</span></h1>
         <input
           type="text"
           placeholder="Search games..."
@@ -68,7 +68,7 @@ function App() {
           onChange={handleSearch}
           className="flix-search"
         />
-        <button onClick={handleRefresh} className="flix-btn" style={{ background: 'var(--flix-bg-tertiary)' }}>
+        <button onClick={handleRefresh} className="flix-btn flix-btn-secondary">
           ↻ Refresh
         </button>
       </header>
@@ -96,7 +96,7 @@ function App() {
         ) : (
           <div className="flix-game-grid">
             {displayedGames.length === 0 ? (
-              <div className="flix-loading">No games found. Try refreshing.</div>
+              <div className="flix-empty">No games found. Try refreshing.</div>
             ) : (
               displayedGames.map(game => (
                 <GameCard key={game.id} game={game} onLaunch={handleLaunch} />

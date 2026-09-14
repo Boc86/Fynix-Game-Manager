@@ -1,5 +1,7 @@
-/* Fynix GM — Netflix Theme Variables */
+/* Fynix Game Manager — Netflix Theme */
+
 :root {
+  /* Netflix color palette */
   --flix-bg: #141414;
   --flix-bg-secondary: #1e1e1e;
   --flix-bg-tertiary: #2a2a2a;
@@ -17,10 +19,10 @@
   --flix-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   --flix-shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.5);
   --flix-font-body: 'Helvetica Neue', Arial, sans-serif;
-  --flix-font-heading: 'Netflix Sans', 'Helvetica Neue', Arial, sans-serif;
+  --flix-font-heading: 'Helvetica Neue', Arial, sans-serif;
 }
 
-/* App container */
+/* App container — full-screen Netflix dark background */
 .flix-app {
   min-height: 100vh;
   background: var(--flix-bg);
@@ -29,27 +31,29 @@
   overflow-x: hidden;
 }
 
+/* Header — Netflix-style sticky bar with logo and search */
 .flix-header {
   display: flex;
   align-items: center;
   gap: 16px;
   padding: 16px 24px;
-  background: linear-gradient(180deg, rgba(20, 20, 20, 0.9) 0%, transparent 100%);
+  background: linear-gradient(180deg, rgba(20, 20, 20, 0.95) 0%, transparent 100%);
   position: sticky;
   top: 0;
   z-index: 100;
   border-bottom: 1px solid var(--flix-border);
+  backdrop-filter: blur(10px);
 }
 
-.flix-header h1 {
+.flix-logo {
   font-family: var(--flix-font-heading);
   font-weight: 700;
-  font-size: 20px;
-  color: var(--flix-red);
+  font-size: 22px;
+  color: var(--flix-text-primary);
 }
 
-.flix-header h1 span {
-  color: var(--flix-text-primary);
+.flix-logo-red {
+  color: var(--flix-red);
 }
 
 .flix-search {
@@ -69,35 +73,160 @@
   box-shadow: 0 0 0 2px var(--flix-red-shadow);
 }
 
-/* Game grid */
+.flix-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--flix-radius);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: var(--flix-transition);
+  color: var(--flix-text-primary);
+}
+
+.flix-btn-primary {
+  background: var(--flix-red);
+  color: white;
+}
+
+.flix-btn-primary:hover {
+  background: var(--flix-red-hover);
+  box-shadow: 0 0 15px var(--flix-red-shadow);
+  transform: translateY(-1px);
+}
+
+.flix-btn-secondary {
+  background: var(--flix-bg-tertiary);
+  color: var(--flix-text-primary);
+  border: 1px solid var(--flix-border);
+}
+
+.flix-btn-secondary:hover {
+  background: var(--flix-border);
+}
+
+/* Sidebar navigation */
+.flix-sidebar {
+  display: flex;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--flix-bg-secondary);
+  border-bottom: 1px solid var(--flix-border);
+  overflow-x: auto;
+}
+
+.flix-sidebar-item {
+  padding: 8px 16px;
+  border-radius: var(--flix-radius);
+  background: transparent;
+  color: var(--flix-text-secondary);
+  font-size: 13px;
+  transition: var(--flix-transition);
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.flix-sidebar-item:hover {
+  background: var(--flix-bg-tertiary);
+  color: var(--flix-text-primary);
+}
+
+.flix-sidebar-item.active {
+  background: var(--flix-red);
+  color: white;
+}
+
+/* Game grid — Netflix-style cover grid */
 .flix-game-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 16px;
+  gap: 20px;
   padding: 24px;
 }
 
-.flix-game-grid .flix-loading {
-  grid-column: 1 / -1;
+.flix-loading,
+.flix-empty {
   text-align: center;
   padding: 48px;
   color: var(--flix-text-secondary);
+  font-size: 16px;
+  grid-column: 1 / -1;
 }
 
-/* Game card */
+/* Game card — Netflix-style cover card */
 .flix-card {
   background: var(--flix-bg-secondary);
-  border-radius: var(--flix-radius);
+  border-radius: var(--flix-radius-large);
   overflow: hidden;
   transition: var(--flix-transition);
-  border: 1px solid var(--flix-border);
-  group-hover: transform 1.02;
+  border: 2px solid transparent;
+  cursor: pointer;
+  position: relative;
 }
 
 .flix-card:hover {
   transform: scale(1.05);
   border-color: var(--flix-red);
   box-shadow: var(--flix-shadow-lg);
+}
+
+/* Card media — cover image with 2:3 aspect ratio */
+.flix-card-media {
+  position: relative;
+  width: 100%;
+  padding-bottom: 150%; /* 2:3 aspect ratio */
+  overflow: hidden;
+}
+
+.flix-card-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.flix-card-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--flix-bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--flix-radius-large) var(--flix-radius-large) 0 0;
+}
+
+.flix-card-placeholder-text {
+  color: var(--flix-text-secondary);
+  font-size: 12px;
+  text-align: center;
+  padding: 8px;
+}
+
+/* Play button overlay on hover */
+.flix-play-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--flix-radius-large);
+}
+
+.flix-card:hover .flix-play-overlay {
+  opacity: 1;
 }
 
 .flix-card-content {
@@ -121,142 +250,4 @@
   font-size: 11px;
   color: var(--flix-text-tertiary);
   margin-top: 4px;
-}
-
-/* Play button overlay */
-.flix-play-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--flix-radius);
-}
-
-.flix-card:hover .flix-play-overlay {
-  opacity: 1;
-}
-
-.flix-btn {
-  padding: 6px 16px;
-  border: none;
-  border-radius: var(--flix-radius);
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
-  transition: var(--flix-transition);
-}
-
-.flix-btn-primary {
-  background: var(--flix-red);
-  color: white;
-}
-
-.flix-btn-primary:hover {
-  background: var(--flix-red-hover);
-  box-shadow: 0 0 15px var(--flix-red-shadow);
-}
-
-/* Sidebar */
-.flix-sidebar {
-  display: flex;
-  gap: 8px;
-  padding: 8px 24px;
-  background: var(--flix-bg-secondary);
-  border-bottom: 1px solid var(--flix-border);
-  overflow-x: auto;
-}
-
-.flix-sidebar-item {
-  padding: 8px 16px;
-  border-radius: var(--flix-radius);
-  background: transparent;
-  color: var(--flix-text-secondary);
-  font-size: 13px;
-  transition: var(--flix-transition);
-  border: 1px solid transparent;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.flix-sidebar-item:hover,
-.flix-sidebar-item.active {
-  background: var(--flix-red);
-  color: white;
-}
-
-/* Game detail view */
-.flix-detail {
-  padding: 24px;
-  background: linear-gradient(180deg, rgba(20, 20, 20, 0.9) 0%, rgba(20, 20, 20, 1) 100%);
-}
-
-.flix-detail-header {
-  display: flex;
-  gap: 24px;
-  align-items: flex-start;
-}
-
-.flix-detail-cover {
-  width: 120px;
-  aspect-ratio: 2/3;
-  border-radius: var(--flix-radius-large);
-  overflow: hidden;
-  flex-shrink: 0;
-  border: 1px solid var(--flix-border);
-}
-
-.flix-detail-cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.flix-detail-info h1 {
-  font-family: var(--flix-font-heading);
-  font-weight: 700;
-  font-size: 28px;
-  margin-bottom: 4px;
-}
-
-.flix-detail-meta {
-  display: flex;
-  gap: 16px;
-  margin-top: 12px;
-  font-size: 13px;
-  color: var(--flix-text-secondary);
-}
-
-/* Plugin panel */
-.flix-plugins {
-  padding: 16px 24px;
-  border-bottom: 1px solid var(--flix-border);
-}
-
-.flix-plugin-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px;
-  background: var(--flix-bg-secondary);
-  border-radius: var(--flix-radius);
-  border: 1px solid var(--flix-border);
-}
-
-.flix-plugin-status {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  display: inline-block;
-}
-
-.flix-plugin-status.on {
-  background: var(--flix-red);
-}
-
-.flix-plugin-status.off {
-  background: var(--flix-text-tertiary);
 }
