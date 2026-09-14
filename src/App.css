@@ -1,0 +1,262 @@
+/* Fynix GM — Netflix Theme Variables */
+:root {
+  --flix-bg: #141414;
+  --flix-bg-secondary: #1e1e1e;
+  --flix-bg-tertiary: #2a2a2a;
+  --flix-red: #e50914;
+  --flix-red-hover: #ff0f19;
+  --flix-red-shadow: rgba(229, 9, 20, 0.4);
+  --flix-text-primary: #e5e5e5;
+  --flix-text-secondary: #b3b3b3;
+  --flix-text-tertiary: #757575;
+  --flix-border: #333333;
+  --flix-border-hover: #444444;
+  --flix-radius: 4px;
+  --flix-radius-large: 8px;
+  --flix-transition: all 0.2s ease;
+  --flix-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --flix-shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.5);
+  --flix-font-body: 'Helvetica Neue', Arial, sans-serif;
+  --flix-font-heading: 'Netflix Sans', 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* App container */
+.flix-app {
+  min-height: 100vh;
+  background: var(--flix-bg);
+  color: var(--flix-text-primary);
+  font-family: var(--flix-font-body);
+  overflow-x: hidden;
+}
+
+.flix-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  background: linear-gradient(180deg, rgba(20, 20, 20, 0.9) 0%, transparent 100%);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid var(--flix-border);
+}
+
+.flix-header h1 {
+  font-family: var(--flix-font-heading);
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--flix-red);
+}
+
+.flix-header h1 span {
+  color: var(--flix-text-primary);
+}
+
+.flix-search {
+  flex: 1;
+  padding: 8px 16px;
+  background: var(--flix-bg-secondary);
+  border: 1px solid var(--flix-border);
+  border-radius: var(--flix-radius-large);
+  color: var(--flix-text-primary);
+  font-size: 14px;
+  outline: none;
+  transition: var(--flix-transition);
+}
+
+.flix-search:focus {
+  border-color: var(--flix-red);
+  box-shadow: 0 0 0 2px var(--flix-red-shadow);
+}
+
+/* Game grid */
+.flix-game-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  padding: 24px;
+}
+
+.flix-game-grid .flix-loading {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 48px;
+  color: var(--flix-text-secondary);
+}
+
+/* Game card */
+.flix-card {
+  background: var(--flix-bg-secondary);
+  border-radius: var(--flix-radius);
+  overflow: hidden;
+  transition: var(--flix-transition);
+  border: 1px solid var(--flix-border);
+  group-hover: transform 1.02;
+}
+
+.flix-card:hover {
+  transform: scale(1.05);
+  border-color: var(--flix-red);
+  box-shadow: var(--flix-shadow-lg);
+}
+
+.flix-card-content {
+  padding: 12px;
+}
+
+.flix-card-title {
+  font-family: var(--flix-font-heading);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--flix-text-primary);
+  margin-bottom: 4px;
+}
+
+.flix-card-meta {
+  font-size: 12px;
+  color: var(--flix-text-secondary);
+}
+
+.flix-card-stats {
+  font-size: 11px;
+  color: var(--flix-text-tertiary);
+  margin-top: 4px;
+}
+
+/* Play button overlay */
+.flix-play-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--flix-radius);
+}
+
+.flix-card:hover .flix-play-overlay {
+  opacity: 1;
+}
+
+.flix-btn {
+  padding: 6px 16px;
+  border: none;
+  border-radius: var(--flix-radius);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: var(--flix-transition);
+}
+
+.flix-btn-primary {
+  background: var(--flix-red);
+  color: white;
+}
+
+.flix-btn-primary:hover {
+  background: var(--flix-red-hover);
+  box-shadow: 0 0 15px var(--flix-red-shadow);
+}
+
+/* Sidebar */
+.flix-sidebar {
+  display: flex;
+  gap: 8px;
+  padding: 8px 24px;
+  background: var(--flix-bg-secondary);
+  border-bottom: 1px solid var(--flix-border);
+  overflow-x: auto;
+}
+
+.flix-sidebar-item {
+  padding: 8px 16px;
+  border-radius: var(--flix-radius);
+  background: transparent;
+  color: var(--flix-text-secondary);
+  font-size: 13px;
+  transition: var(--flix-transition);
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.flix-sidebar-item:hover,
+.flix-sidebar-item.active {
+  background: var(--flix-red);
+  color: white;
+}
+
+/* Game detail view */
+.flix-detail {
+  padding: 24px;
+  background: linear-gradient(180deg, rgba(20, 20, 20, 0.9) 0%, rgba(20, 20, 20, 1) 100%);
+}
+
+.flix-detail-header {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.flix-detail-cover {
+  width: 120px;
+  aspect-ratio: 2/3;
+  border-radius: var(--flix-radius-large);
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid var(--flix-border);
+}
+
+.flix-detail-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.flix-detail-info h1 {
+  font-family: var(--flix-font-heading);
+  font-weight: 700;
+  font-size: 28px;
+  margin-bottom: 4px;
+}
+
+.flix-detail-meta {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--flix-text-secondary);
+}
+
+/* Plugin panel */
+.flix-plugins {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--flix-border);
+}
+
+.flix-plugin-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: var(--flix-bg-secondary);
+  border-radius: var(--flix-radius);
+  border: 1px solid var(--flix-border);
+}
+
+.flix-plugin-status {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.flix-plugin-status.on {
+  background: var(--flix-red);
+}
+
+.flix-plugin-status.off {
+  background: var(--flix-text-tertiary);
+}

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Fynix Game Manager
+Comment=Lightweight cross-store game launcher
+GenericName=Game Launcher
+Exec=fynix-gm
+Icon=fynix-gm
+Terminal=false
+Type=Application
+Categories=Game;
+StartupNotify=true
