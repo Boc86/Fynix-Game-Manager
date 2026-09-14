@@ -1,4 +1,4 @@
-// Component for displaying a single game card in the Netflix-style grid
+// GameCard — Netflix-style cover-only hover card
 import { Game } from '../types/Game';
 
 interface GameCardProps {
@@ -7,10 +7,12 @@ interface GameCardProps {
 }
 
 export function GameCard({ game, onLaunch }: GameCardProps) {
+  const hasImage = game.cover_url && game.cover_url.length > 0;
+
   return (
     <div className="flix-card" data-game-id={game.id}>
       <div className="flix-card-media">
-        {game.cover_url ? (
+        {hasImage ? (
           <img
             src={game.cover_url}
             alt={game.name}
@@ -22,19 +24,13 @@ export function GameCard({ game, onLaunch }: GameCardProps) {
           </div>
         )}
         <div className="flix-play-overlay">
-          <button
-            onClick={() => onLaunch(game.id)}
-            className="flix-btn flix-btn-primary"
-          >
-            ▶ Play
-          </button>
+          <div className="flix-play-icon"></div>
         </div>
       </div>
-      <div className="flix-card-content">
-        <h3 className="flix-card-title">{game.name}</h3>
-        <p className="flix-card-meta">{game.publisher}</p>
+      <div className="flix-card-stats">
+        <h3 className="flix-card-title" title={game.name}>{game.name}</h3>
         {game.playtime_hours && (
-          <p className="flix-card-stats">{Math.round(game.playtime_hours)}h played</p>
+          <span className="flix-card-meta">{Math.round(game.playtime_hours)}h</span>
         )}
       </div>
     </div>
