@@ -33,15 +33,18 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "targets": ["deb", "rpm", "AppImage"],
+    "targets": [
+      "deb",
+      "rpm",
+      "appimage"
+    ],
     "linux": {
       "deb": {
         "depends": [
           "libwebkit2gtk-4.1-37",
           "libgtk-3-0"
         ]
-      },
-      "appimage": {}
+      }
     }
   }
 }
