@@ -35,15 +35,11 @@
     ],
     "targets": ["deb", "rpm", "AppImage"],
     "linux": {
-      "maintainer": "Boc86 <boc_est1986@proton.me>",
       "deb": {
         "depends": [
           "libwebkit2gtk-4.1-37",
           "libgtk-3-0"
         ]
-      },
-      "rpm": {
-        "license": "MIT"
       },
       "appimage": {}
     }
