@@ -3,6 +3,9 @@ use crate::core::plugin::StorePlugin;
 use crate::plugins::steam::SteamPlugin;
 use crate::plugins::heroic::HeroicPlugin;
 use crate::plugins::lutris::LutrisPlugin;
+use crate::plugins::epic::EpicPlugin;
+use crate::plugins::gog::GogPlugin;
+use crate::plugins::amazon::AmazonPlugin;
 use std::path::PathBuf;
 
 /// Plugin loader — discovers and loads both built-in and external plugins.
@@ -18,7 +21,7 @@ impl PluginLoader {
         Self { plugin_dir }
     }
 
-    /// Get all built-in plugins (Steam, Heroic, Lutris).
+    /// Get all built-in plugins (Steam, Heroic, Lutris, Epic, GOG, Amazon).
     /// These are always available without external dependencies.
     pub fn builtin_plugins(&self) -> Vec<Box<dyn StorePlugin>> {
         // Auto-detect Steam path
@@ -32,6 +35,9 @@ impl PluginLoader {
             Box::new(SteamPlugin::new(steam_path)),
             Box::new(HeroicPlugin::new()),
             Box::new(LutrisPlugin::new()),
+            Box::new(EpicPlugin::new()),
+            Box::new(GogPlugin::new()),
+            Box::new(AmazonPlugin::new()),
         ]
     }
 

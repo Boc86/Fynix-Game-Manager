@@ -33,7 +33,8 @@ impl GameLibrary {
         plugins.push(plugin);
     }
 
-    /// Trigger a full re-scan of all plugins' installed games.
+    /// Trigger a full re-scan of all plugins.
+    /// Calls `list_user_library()` on each plugin to get ALL games (installed + uninstalled).
     /// Clears and repopulates the library. Safe to call multiple times.
     pub async fn refresh(&self) -> anyhow::Result<usize> {
         let mut games = self.games.lock().await;
@@ -42,7 +43,7 @@ impl GameLibrary {
         let plugins = self.plugins.lock().await;
         for plugin in plugins.iter() {
             if plugin.is_authenticated() {
-                match plugin.detect_installed_games().await {
+                match plugin.list_user_library().await {
                     Ok(found) => {
                         for game in found {
                             games.insert(game.id.clone(), game);

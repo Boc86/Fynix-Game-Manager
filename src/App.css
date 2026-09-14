@@ -233,6 +233,10 @@
   margin-bottom: 32px;
 }
 
+.flix-store-group {
+  margin-bottom: 40px;
+}
+
 .flix-row-title {
   font-family: var(--flix-font-heading);
   font-size: 22px;
@@ -370,6 +374,24 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.flix-card.not-installed .flix-card-image {
+  opacity: 0.5;
+  filter: grayscale(40%) brightness(0.8);
+}
+
+.flix-card-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(229, 9, 20, 0.9);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 3px;
+  backdrop-filter: blur(4px);
 }
 
 .flix-loading {

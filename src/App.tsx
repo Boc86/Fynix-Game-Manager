@@ -4,6 +4,15 @@ import { Game } from './types/Game';
 import { GameCard } from './components/GameCard';
 import './App.css';
 
+const STORE_NAMES: Record<string, string> = {
+  steam: 'Steam',
+  heroic: 'Heroic',
+  lutris: 'Lutris',
+  epic: 'Epic Games',
+  gog: 'GOG',
+  amazon: 'Amazon Prime',
+};
+
 function App() {
   const [games, setGames] = useState<Game[]>([]);
   const [search, setSearch] = useState('');
@@ -82,8 +91,8 @@ function App() {
       .slice(0, 12);
   }, [filtered]);
 
-  // Games for the "All Games" tab (split into rows of 12 for carousels)
-  const allGamesRows = useMemo(() => {
+  // Split filtered games into rows of 12 for carousels
+  const filteredRows = useMemo(() => {
     const rows: Game[][] = [];
     for (let i = 0; i < filtered.length; i += 12) {
       rows.push(filtered.slice(i, i + 12));
@@ -91,13 +100,34 @@ function App() {
     return rows;
   }, [filtered]);
 
-  const displayedGames = activeTab === 'recent' ? recentGames : filtered;
-  const displayedRows = activeTab === 'recent'
-    ? displayedGames.length > 0 ? [displayedGames] : []
-    : allGamesRows;
+  // Split store groups into rows per store
+  const storeGroupedRows = useMemo(() => {
+    const result: { store: string; storeName: string; rows: Game[][] }[] = [];
+    Object.entries(storeGroups).forEach(([store, storeGames]) => {
+      const rows: Game[][] = [];
+      for (let i = 0; i < storeGames.length; i += 12) {
+        rows.push(storeGames.slice(i, i + 12));
+      }
+      result.push({
+        store,
+        storeName: STORE_NAMES[store] || store,
+        rows,
+      });
+    });
+    return result.sort((a, b) => a.storeName.localeCompare(b.storeName));
+  }, [storeGroups]);
 
-  // Hero game (first game for the hero banner)
-  const heroGame = games.find(g => g.cover_url);
+  const activeRows = activeTab === 'recent'
+    ? (recentGames.length > 0 ? [{ store: 'recent', storeName: 'Recently Played', rows: [recentGames] }] : [])
+    : storeGroupedRows.map(g => ({ store: g.store, storeName: g.storeName, rows: g.rows }));
+
+  // Flatten rows for display (Netflix style: "All Games" section)
+  const displayedRows = activeTab === 'recent'
+    ? (recentGames.length > 0 ? [recentGames] : [])
+    : filteredRows;
+
+  // Hero game (first installed game with a cover)
+  const heroGame = games.find(g => g.cover_url && g.install_path);
 
   return (
     <div className="flix-app">
@@ -162,24 +192,43 @@ function App() {
         ) : displayedRows.length === 0 ? (
           <div className="flix-empty">
             <h3>No games found</h3>
-            <p>Install games in Steam, Heroic, or Lutris to see them here.</p>
+            <p>Connect Steam, Heroic, Epic, GOG, or Amazon in Settings to see your library here.</p>
           </div>
         ) : (
-          displayedRows.map((row, i) => (
-            <div className="flix-row" key={i}>
-              {activeTab === 'recent' && i === 0 && (
-                <h2 className="flix-row-title">Recently Played</h2>
-              )}
-              {activeTab === 'all' && i === 0 && (
-                <h2 className="flix-row-title">All Games</h2>
-              )}
-              <div className="flix-card-container">
-                {row.map(game => (
-                  <GameCard key={game.id} game={game} onLaunch={handleLaunch} />
-                ))}
-              </div>
-            </div>
-          ))
+          // When browsing "All Games", show grouped by store; when searching, show flat rows
+          activeTab === 'all' && !search
+            ? activeRows.map((group, gi) => (
+                <div className="flix-store-group" key={group.store}>
+                  <h2 className="flix-row-title">{group.storeName}</h2>
+                  {group.rows.map((row, ri) => (
+                    <div className="flix-row" key={`${group.store}-${ri}`}>
+                      <div className="flix-card-container">
+                        {row.map(game => (
+                          <GameCard key={game.id} game={game} onLaunch={handleLaunch} />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))
+            : displayedRows.map((row, i) => (
+                <div className="flix-row" key={i}>
+                  {activeTab === 'recent' && i === 0 && (
+                    <h2 className="flix-row-title">Recently Played</h2>
+                  )}
+                  {activeTab === 'all' && !search && i === 0 && (
+                    <h2 className="flix-row-title">All Games</h2>
+                  )}
+                  {activeTab === 'all' && search && i === 0 && (
+                    <h2 className="flix-row-title">Search Results</h2>
+                  )}
+                  <div className="flix-card-container">
+                    {row.map(game => (
+                      <GameCard key={game.id} game={game} onLaunch={handleLaunch} />
+                    ))}
+                  </div>
+                </div>
+              ))
         )}
       </div>
     </div>

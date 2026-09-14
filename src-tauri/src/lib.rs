@@ -14,6 +14,9 @@ pub use core::plugin_loader::PluginLoader;
 pub use plugins::steam::{SteamPlugin, parse_appmanifest};
 pub use plugins::heroic::{HeroicPlugin, parse_heroic_games};
 pub use plugins::lutris::{LutrisPlugin, parse_lutris_yaml};
+pub use plugins::epic::{EpicPlugin, parse_legendary_library};
+pub use plugins::gog::{GogPlugin, parse_gog_library};
+pub use plugins::amazon::{AmazonPlugin, parse_nile_library};
 
 use tauri::Manager;
 
