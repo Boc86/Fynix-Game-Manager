@@ -121,3 +121,51 @@ async fn test_game_library_aggregation() {
     let games = lib.all_games().await;
     assert!(games.is_empty());
 }
+
+#[tokio::test]
+async fn test_steam_plugin_artwork() {
+    let plugin = SteamPlugin::new(PathBuf::from("/nonexistent"));
+    // Steam artwork URL format: cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg
+    let result = plugin.get_artwork("steam:730").await.unwrap();
+    assert!(result.is_some());
+    let url = result.unwrap();
+    assert!(url.contains("cdn.cloudflare.steamstatic.com"));
+    assert!(url.contains("730"));
+    assert!(url.contains("header.jpg"));
+}
+
+#[tokio::test]
+async fn test_heroic_plugin_artwork() {
+    let plugin = HeroicPlugin::new();
+    let result = plugin.get_artwork("heroic:abc-123").await.unwrap();
+    assert!(result.is_some());
+    let url = result.unwrap();
+    assert!(url.contains("gamenerd") || url.contains("heroicgames.com"));
+}
+
+#[tokio::test]
+async fn test_library_fetch_artwork() {
+    use fynix_gm::core::library::GameLibrary;
+    let lib = GameLibrary::new();
+    lib.register_plugin(Box::new(SteamPlugin::new(PathBuf::from("/nonexistent")))).await;
+    lib.register_plugin(Box::new(HeroicPlugin::new())).await;
+
+    // Fetch artwork for a Steam game
+    let result = lib.fetch_artwork("steam:730").await.unwrap();
+    assert!(result.is_some());
+    let url = result.unwrap();
+    assert!(url.contains("steamstatic.com"));
+
+    // Fetch artwork for a Heroic game
+    let result = lib.fetch_artwork("heroic:abc-123").await.unwrap();
+    assert!(result.is_some());
+}
+
+#[tokio::test]
+async fn test_steam_plugin_detect_steam_path() {
+    let path = SteamPlugin::detect_steam_path();
+    // On this system Steam should be installed
+    assert!(path.is_some());
+    let p = path.unwrap();
+    assert!(p.join("steamapps").exists());
+}

@@ -393,3 +393,172 @@
   margin-bottom: 8px;
   color: var(--flix-text-primary);
 }
+
+/* ===== Responsive Breakpoints ===== */
+
+/* Tablet / small desktop */
+@media (max-width: 1280px) {
+  .flix-header {
+    padding: 0 24px;
+  }
+
+  .flix-header-nav {
+    gap: 20px;
+  }
+
+  .flix-hero-title {
+    font-size: 36px;
+  }
+
+  .flix-hero-overlay {
+    padding: 48px 24px 32px;
+  }
+
+  .flix-rows {
+    padding: 0 24px;
+  }
+
+  .flix-card {
+    width: 180px;
+  }
+
+  .flix-row-title {
+    font-size: 20px;
+  }
+}
+
+/* Large tablet */
+@media (max-width: 1024px) {
+  .flix-header {
+    height: 60px;
+    padding: 0 16px;
+  }
+
+  .flix-header-nav {
+    gap: 16px;
+  }
+
+  .flix-header-nav a {
+    font-size: 14px;
+  }
+
+  .flix-search input {
+    width: 200px;
+  }
+
+  .flix-search input:focus {
+    width: 280px;
+  }
+
+  .flix-hero {
+    height: 320px;
+  }
+
+  .flix-hero-title {
+    font-size: 28px;
+    max-width: 500px;
+  }
+
+  .flix-hero-actions .flix-btn {
+    padding: 10px 24px;
+    font-size: 14px;
+  }
+
+  .flix-rows {
+    padding: 0 16px;
+  }
+
+  .flix-card {
+    width: 160px;
+  }
+
+  .flix-row-title {
+    font-size: 18px;
+  }
+
+  .flix-card-container {
+    gap: 10px;
+  }
+}
+
+/* Small tablet / large phone */
+@media (max-width: 768px) {
+  .flix-header {
+    height: 56px;
+    padding: 0 12px;
+  }
+
+  .flix-logo {
+    font-size: 20px;
+  }
+
+  .flix-header-nav {
+    display: none;
+  }
+
+  .flix-hero {
+    height: 260px;
+  }
+
+  .flix-hero-title {
+    font-size: 22px;
+    max-width: 100%;
+  }
+
+  .flix-hero-overlay {
+    padding: 32px 12px 24px;
+  }
+
+  .flix-hero-actions {
+    gap: 8px;
+  }
+
+  .flix-hero-actions .flix-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+
+  .flix-rows {
+    padding: 0 12px;
+  }
+
+  .flix-card {
+    width: 140px;
+  }
+
+  .flix-card-stats {
+    padding: 8px;
+  }
+
+  .flix-row-title {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+}
+
+/* Phone */
+@media (max-width: 480px) {
+  .flix-header {
+    padding: 0 8px;
+  }
+
+  .flix-logo {
+    font-size: 18px;
+  }
+
+  .flix-hero {
+    height: 200px;
+  }
+
+  .flix-hero-title {
+    font-size: 18px;
+  }
+
+  .flix-card {
+    width: 120px;
+  }
+
+  .flix-rows {
+    padding: 0 8px;
+  }
+}

@@ -9,8 +9,8 @@ use tokio::sync::Mutex;
 /// Thread-safe for concurrent access from Tauri commands.
 /// Uses a Mutex-wrapped HashMap for game storage, keyed by composite ID.
 pub struct GameLibrary {
-    plugins: Arc<Mutex<Vec<Box<dyn StorePlugin>>>>,
-    games: Arc<Mutex<HashMap<String, Game>>>,
+    pub plugins: Arc<Mutex<Vec<Box<dyn StorePlugin>>>>,
+    pub games: Arc<Mutex<HashMap<String, Game>>>,
 }
 
 impl Default for GameLibrary {
@@ -117,5 +117,36 @@ impl GameLibrary {
             "No plugin found for store_id '{}'",
             store_id
         ))
+    }
+
+    /// Fetch artwork (cover URL) for a game from its store plugin.
+    /// Falls back to searching other plugins if the game's own store can't provide art.
+    pub async fn fetch_artwork(&self, game_id: &str) -> anyhow::Result<Option<String>> {
+        let store_id = game_id
+            .split(':')
+            .next()
+            .unwrap_or("unknown");
+
+        let plugins = self.plugins.lock().await;
+
+        // 1. Try the game's own store plugin first
+        for plugin in plugins.iter() {
+            if plugin.store_id() == store_id {
+                if let Ok(Some(url)) = plugin.get_artwork(game_id).await {
+                    return Ok(Some(url));
+                }
+            }
+        }
+
+        // 2. Fall back to any other plugin that might have artwork
+        for plugin in plugins.iter() {
+            if plugin.store_id() != store_id {
+                if let Ok(Some(url)) = plugin.get_artwork(game_id).await {
+                    return Ok(Some(url));
+                }
+            }
+        }
+
+        Ok(None)
     }
 }

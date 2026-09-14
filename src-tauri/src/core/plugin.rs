@@ -39,4 +39,12 @@ pub trait StorePlugin: Send + Sync {
     
     /// Check if the plugin is authenticated / has access to the store.
     fn is_authenticated(&self) -> bool;
+
+    /// Fetch artwork (cover URL) for a game that doesn't have one.
+    /// Implementations should look up the game in their store's cover art database.
+    /// Returns a cover image URL if found, or None if no artwork is available.
+    async fn get_artwork(&self, game_id: &str) -> anyhow::Result<Option<String>> {
+        // Default: no artwork lookup available
+        Ok(None)
+    }
 }

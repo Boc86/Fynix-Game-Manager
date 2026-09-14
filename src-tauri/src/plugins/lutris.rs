@@ -110,4 +110,23 @@ impl StorePlugin for LutrisPlugin {
     fn is_authenticated(&self) -> bool {
         self.games_dir().exists()
     }
+
+    async fn get_artwork(&self, game_id: &str) -> anyhow::Result<Option<String>> {
+        let id = game_id.strip_prefix("lutris:").ok_or_else(|| anyhow::anyhow!("invalid lutris id"))?;
+        // Lutris stores cover art in its data directory
+        // Try local cache paths first, then fall back to IGDB URL format
+        let cache_dirs = [
+            self.config_path.join("images"),
+            self.config_path.join("banners"),
+        ];
+        for dir in &cache_dirs {
+            let path = dir.join(format!("{}.jpg", id));
+            if path.exists() {
+                return Ok(Some(format!("file://{}", path.display())));
+            }
+        }
+        // Fall back to IGDB search format (would need API key for actual lookup)
+        // For now, return None — Lutris doesn't have a public CDN like Steam
+        Ok(None)
+    }
 }

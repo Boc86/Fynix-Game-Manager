@@ -28,6 +28,8 @@ pub fn run() {
             tauri_commands::launch_game,
             tauri_commands::refresh_library,
             tauri_commands::get_plugin_names,
+            tauri_commands::get_artwork,
+            tauri_commands::fetch_missing_artwork,
         ])
         .setup(|app| {
             let library = GameLibrary::new();

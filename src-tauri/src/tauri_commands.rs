@@ -62,3 +62,38 @@ pub async fn get_plugin_names(
 ) -> Result<Vec<String>, String> {
     Ok(state.plugin_names().await)
 }
+
+/// Fetch artwork (cover URL) for a specific game.
+#[tauri::command]
+pub async fn get_artwork(
+    state: State<'_, GameLibrary>,
+    game_id: String,
+) -> Result<Option<String>, String> {
+    state.fetch_artwork(&game_id)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// Fetch missing artwork for all games that don't have a cover_url.
+/// Returns the number of games updated with new artwork.
+#[tauri::command]
+pub async fn fetch_missing_artwork(
+    state: State<'_, GameLibrary>,
+) -> Result<usize, String> {
+    let games = state.all_games().await;
+    let mut updated_count = 0usize;
+
+    for game in &games {
+        if game.cover_url.is_none() {
+            if let Ok(Some(url)) = state.fetch_artwork(&game.id).await {
+                // Update the game in the library with the new cover URL
+                let mut g = game.clone();
+                g.cover_url = Some(url);
+                let mut games_map = state.games.lock().await;
+                games_map.insert(g.id.clone(), g);
+                updated_count += 1;
+            }
+        }
+    }
+    Ok(updated_count)
+}

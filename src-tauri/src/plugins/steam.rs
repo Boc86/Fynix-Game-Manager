@@ -249,6 +249,12 @@ impl StorePlugin for SteamPlugin {
     fn is_authenticated(&self) -> bool {
         self.steam_path.exists()
     }
+
+    async fn get_artwork(&self, game_id: &str) -> anyhow::Result<Option<String>> {
+        let app_id = game_id.strip_prefix("steam:").ok_or_else(|| anyhow::anyhow!("invalid steam id"))?;
+        // Steam CDN provides cover art at this URL
+        Ok(Some(format!("https://cdn.cloudflare.steamstatic.com/steam/apps/{}/header.jpg", app_id)))
+    }
 }
 
 #[cfg(test)]

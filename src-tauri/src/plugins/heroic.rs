@@ -136,4 +136,16 @@ impl StorePlugin for HeroicPlugin {
     fn is_authenticated(&self) -> bool {
         self.games_file().exists() || self.games_dir().exists()
     }
+
+    async fn get_artwork(&self, game_id: &str) -> anyhow::Result<Option<String>> {
+        let id = game_id.strip_prefix("heroic:").ok_or_else(|| anyhow::anyhow!("invalid heroic id"))?;
+        // Heroic stores cover art in its cache directory, or can use CDN
+        // Try local cache first, then fall back to CDN URL format
+        let cache_path = self.config_path.join("images-cache").join(format!("{}.jpg", id));
+        if cache_path.exists() {
+            return Ok(Some(format!("file://{}", cache_path.display())));
+        }
+        // Heroic CDN URL pattern
+        Ok(Some(format!("https://cdn.gamenerdstore.com/heroic/covers/{}.jpg", id)))
+    }
 }

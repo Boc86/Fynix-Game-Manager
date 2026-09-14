@@ -13,8 +13,15 @@ function App() {
   useEffect(() => {
     const loadGames = async () => {
       try {
+        // Fetch games first
         const result = await invoke<Game[]>('get_all_games');
         setGames(result || []);
+
+        // Fetch missing artwork for games without covers
+        await invoke('fetch_missing_artwork');
+        // Reload to get updated games with covers
+        const refreshed = await invoke<Game[]>('get_all_games');
+        setGames(refreshed || []);
       } catch (e) {
         console.error('Failed to load games:', e);
       } finally {
